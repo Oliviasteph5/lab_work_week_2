@@ -1,2 +1,3 @@
 # lab_work_week_2
-Lab works from week 2 onwards
+
+This Repo contains all *LabWork* from week 2 onwards. 
