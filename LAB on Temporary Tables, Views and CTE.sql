@@ -5,10 +5,10 @@
 #First, create a view that summarizes rental information for each customer. 
 #The view should include the customer's ID, name, email address, and total number of rentals (rental_count).
 
-CREATE VIEW cust_rental_info
+CREATE VIEW cust_rental_info AS
 SELECT customer.customer_id, first_name, last_name, email, COUNT(rental_id) AS rental_count
 FROM customer  
-LEFT JOIN rental ON customer.customer_id = rental.customer_id
+INNER JOIN rental ON customer.customer_id = rental.customer_id
 GROUP BY customer_id, first_name, last_name, email;
 
 SELECT * FROM cust_rental_info;
@@ -21,7 +21,7 @@ SELECT * FROM cust_rental_info;
 CREATE TEMPORARY TABLE temp_cust_pmt_summary AS
 SELECT cust_rental_info.customer_id, SUM(payment.amount) AS total_paid
 FROM cust_rental_info
-JOIN payment ON cust_rental_info.customer_id = payment.customer_id
+INNER JOIN payment ON cust_rental_info.customer_id = payment.customer_id
 GROUP BY cust_rental_info.customer_id;
 
 SELECT * FROM temp_cust_pmt_summary;
@@ -36,19 +36,13 @@ SELECT * FROM temp_cust_pmt_summary;
 WITH CustomerSummaryReportCTE AS (
     SELECT cust_rental_info.customer_id, cust_rental_info.first_name, cust_rental_info.last_name, cust_rental_info.email, cust_rental_info.rental_count, temp_cust_pmt_summary.total_paid
     FROM cust_rental_info
-    LEFT JOIN temp_cust_pmt_summary ON cust_rental_info.customer_id = temp_cust_pmt_summary.customer_id
+    INNER JOIN temp_cust_pmt_summary ON cust_rental_info.customer_id = temp_cust_pmt_summary.customer_id
 )
 
  #In order to generate the final customer summary, join the rental info view with the payment summary temporary table.
  #The final query selects the necessary columns for the final customer summary report 
  #and the derived column for the avergae payment per rental.
 
-SELECT
-    customer_id,
-    CONCAT(first_name, ' ', last_name) AS customer_name,
-    email,
-    rental_count,
-    total_paid,
-    CASE WHEN rental_count > 0 THEN total_paid / rental_count ELSE 0 END AS avg_pmt_per_rental
+SELECT customer_id, CONCAT(first_name, ' ', last_name) AS customer_name, email, rental_count, total_paid, ROUND(total_paid / rental_count, 1) AS avg_pmt_per_rental
 FROM CustomerSummaryReportCTE;
 
